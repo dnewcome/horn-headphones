@@ -1,0 +1,38 @@
+<!doctype html><meta charset="utf-8"><title>Horn Lab browser checks</title>
+<pre id="result">RUNNING</pre><iframe src="../index.html" width="1000" height="800"></iframe>
+<script>
+document.querySelector('iframe').onload=async function(){
+  const w=this.contentWindow,d=w.document,out=document.getElementById('result');
+  try {
+    function assert(value,message){if(!value)throw Error(message);}
+    assert(d.getElementById('stats').textContent.includes('133 VERTICES'),'initial mesh');
+    for(const name of ['Ram curl','Twisted ibex','Swept goat']){d.getElementById('preset').value=name;d.getElementById('preset').dispatchEvent(new w.Event('change'));assert(d.getElementById('shape-name').textContent===name,'preset '+name);}
+    d.getElementById('lean').value=30;d.getElementById('lean').dispatchEvent(new w.Event('input'));
+    assert(d.getElementById('lean-number').value==='30','range updates number');
+    d.getElementById('sides-number').value=5;d.getElementById('sides-number').dispatchEvent(new w.Event('input'));
+    assert(d.getElementById('stats').textContent.includes('95 VERTICES'),'number changes mesh');
+    let blob,name;w.URL.createObjectURL=b=>{blob=b;return 'blob:test';};w.URL.revokeObjectURL=()=>{};w.HTMLAnchorElement.prototype.click=function(){name=this.download;};
+    d.getElementById('stl').click();assert((await blob.text()).startsWith('solid horn'),'STL download');
+    d.getElementById('right').checked=true;d.getElementById('obj').click();assert(name==='horn-mirrored.obj','mirrored download');assert((await blob.text()).includes('\nf '),'OBJ faces');
+    assert((await blob.text()).split('\n').some(line=>line.startsWith('f ')&&line.split(' ').length===5),'quad OBJ');
+    for(const type of ['split','decimated']){
+      d.getElementById('mesh-type').value=type;d.getElementById('mesh-type').dispatchEvent(new w.Event('change'));
+      d.getElementById('obj').click();assert((await blob.text()).split('\n').filter(line=>line.startsWith('f ')).every(line=>line.split(' ').length===4),type+' OBJ');
+    }
+    const before=d.getElementById('stats').textContent;
+    d.getElementById('detail').value=10;d.getElementById('detail').dispatchEvent(new w.Event('input'));
+    assert(d.getElementById('stats').textContent!==before,'decimation detail changes mesh');
+    d.getElementById('save').click();const decimated=JSON.parse(await blob.text());
+    d.getElementById('mesh-type').value='triangles';d.getElementById('mesh-type').dispatchEvent(new w.Event('change'));
+    assert(d.getElementById('stats').textContent.includes('186 TRIANGLES'),'triangle preview count');
+    d.getElementById('obj').click();assert((await blob.text()).split('\n').filter(line=>line.startsWith('f ')).every(line=>line.split(' ').length===4),'all OBJ faces are triangles');
+    d.getElementById('save').click();const saved=JSON.parse(await blob.text());assert(saved.parameters.lean===30&&saved.meshType==='triangles','saved settings');
+    const input=d.getElementById('file');
+    async function load(data){const transfer=new w.DataTransfer();transfer.items.add(new w.File([JSON.stringify(data)],'settings.json',{type:'application/json'}));input.files=transfer.files;await input.onchange({target:input});}
+    d.getElementById('mesh-type').value='quads';await load(saved);assert(d.getElementById('mesh-type').value==='triangles','restored mesh type');
+    await load(decimated);assert(d.getElementById('mesh-type').value==='decimated'&&d.getElementById('detail').value==='10','restored decimation');
+    delete saved.meshType;await load(saved);assert(d.getElementById('mesh-type').value==='quads','legacy settings default');
+    out.textContent='PASS: presets, sliders, numeric controls, STL, all four mesh modes, decimation detail, saved and loaded mesh type';
+  }catch(e){out.textContent='FAIL: '+e.stack;}
+};
+</script>

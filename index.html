@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Horn Lab</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<aside>
+  <header><span class="eyebrow">PARAMETRIC OBJECTS / 001</span><h1>Horn Lab<span>↗</span></h1><p>Goat, ram, or something stranger.<br>Shape a pair. Keep the facets.</p></header>
+  <label class="preset-label" for="preset">Starting shape</label><select id="preset"></select>
+  <label class="preset-label" for="mesh-type">Mesh faces</label><select id="mesh-type"><option value="quads">Quads</option><option value="split">Split-quad triangles</option><option value="triangles">Triangular lattice</option><option value="decimated">Decimated triangles</option></select>
+  <div id="decimation-controls" hidden><div class="control"><label for="detail">Retained mesh detail <output id="detail-value">25%</output></label><input id="detail" type="range" min="5" max="100" step="1" value="25"></div><p class="note">Lower detail creates larger, irregular facets. The base and tip perimeters stay fixed.</p></div>
+  <div id="controls"></div>
+  <section><h2>View & export</h2><label class="check"><input type="checkbox" id="paired" checked> Preview mirrored pair</label><label class="check"><input type="checkbox" id="edges" checked> Show polygon edges</label><label class="check"><input type="checkbox" id="right"> Export mirrored horn</label></section>
+  <div class="buttons"><button id="stl">Export STL ↗</button><button id="obj">Export OBJ ↗</button><button id="save" class="secondary">Save settings</button><button id="load" class="secondary">Load settings</button></div>
+  <input id="file" type="file" accept=".json,application/json" hidden>
+  <p class="note">Exports contain one closed horn, in mm. Export each side separately for a pair. Base is flat; mounting hardware is not included.</p>
+</aside>
+<main><div class="topbar"><span>FORM STUDY <b id="shape-name">Swept goat</b></span><button id="reset" class="secondary">Reset view</button></div><canvas id="view" aria-label="Interactive horn preview. Drag to orbit and scroll to zoom."></canvas><div class="bottom"><div id="stats"></div><p>DRAG TO ORBIT · SCROLL TO ZOOM</p></div><div id="message" role="status"></div></main>
+<script src="decimate.js"></script><script src="horn.js"></script><script src="app.js"></script>
+</body></html>

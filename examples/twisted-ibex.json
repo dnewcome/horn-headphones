@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "parameters": {
+    "length": 190,
+    "diameter": 32,
+    "segments": 22,
+    "sides": 7,
+    "curl": 55,
+    "sweep": 130,
+    "twist": 200,
+    "taper": 0.75,
+    "bend": 1.1,
+    "oval": 0.75,
+    "tip": 1.2,
+    "lean": 0,
+    "swivel": 0
+  }
+}
