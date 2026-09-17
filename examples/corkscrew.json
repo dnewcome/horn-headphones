@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "parameters": {
+    "length": 260,
+    "diameter": 22,
+    "segments": 48,
+    "sides": 7,
+    "curl": 115,
+    "sweep": 35,
+    "twist": 0,
+    "taper": 0.95,
+    "bend": 1.1,
+    "oval": 1,
+    "tip": 1.2,
+    "lean": 0,
+    "swivel": 0,
+    "curveMode": "corkscrew",
+    "turns": 1.5,
+    "coilAngle": 60,
+    "coilTaper": 0.3
+  }
+}

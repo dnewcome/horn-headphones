@@ -3,17 +3,18 @@ const $=id=>document.getElementById(id);
 let params={...Horn.defaults},mesh,yaw=-0.65,pitch=0.2,zoom=1;
 const fields=[
   ['Curve & silhouette',[['length','Centerline length',1,'mm'],['diameter','Base diameter',1,'mm'],['curl','Curl',1,'°'],['sweep','3D sweep',1,'°'],['bend','Bend distribution',0.05,''],['taper','Taper exponent',0.05,''],['tip','Tip diameter',0.1,'mm']]],
+  ['Spiral shape',[['turns','Spiral turns',0.05,''],['coilAngle','Coil angle / spread',1,'°'],['coilTaper','Tighten toward tip',0.05,'']]],
   ['Facets & twist',[['segments','Lengthwise segments',1,''],['sides','Cross-section sides',1,''],['twist','Cross-section twist',1,'°'],['oval','Oval ratio',0.05,'']]],
   ['Mounting orientation',[['lean','Lean from base normal',1,'°'],['swivel','Swivel around base',1,'°']]]
 ];
 for(const [title,items] of fields){const section=document.createElement('section');section.innerHTML=`<h2>${title}</h2>`;for(const [key,label,step,unit] of items){const [min,max]=Horn.limits[key],div=document.createElement('div');div.className='control';div.innerHTML=`<label for="${key}">${label}<span class="value"><input aria-label="${label} value" id="${key}-number" type="number" min="${min}" max="${max}" step="${step}" value="${params[key]}">${unit}</span></label><input id="${key}" type="range" min="${min}" max="${max}" step="${step}" value="${params[key]}">`;section.append(div);for(const suffix of ['', '-number'])div.querySelector('#'+key+suffix).addEventListener('input',e=>{const value=Number(e.target.value);if(e.target.value===''||!e.target.validity.valid)return;params[key]=value;$(key+(suffix?'':'-number')).value=value;$('shape-name').textContent='Custom shape';rebuild();});} $('controls').append(section);}
 for(const name of Object.keys(Horn.presets))$('preset').add(new Option(name,name));
-function sync(){for(const key of Object.keys(Horn.limits)){ $(key).value=params[key];$(key+'-number').value=params[key]; }rebuild();}
+function sync(){$('curve-mode').value=params.curveMode;for(const key of Object.keys(Horn.limits)){ $(key).value=params[key];$(key+'-number').value=params[key]; }rebuild();}
 $('preset').onchange=()=>{params={...Horn.presets[$('preset').value]};$('shape-name').textContent=$('preset').value;sync();};
-function rebuild(){const meshType=$('mesh-type').value;$('decimation-controls').hidden=meshType!=='decimated';$('detail-value').textContent=$('detail').value+'%';mesh=Horn.generate({...params,meshType,detail:Number($('detail').value)});const size=Horn.bounds(mesh).size;$('stats').innerHTML=`${mesh.vertices.length} VERTICES / ${$('mesh-type').value!=='quads'?mesh.faces.length+' TRIANGLES':mesh.faces.length+' POLYGONS (QUADS + CAPS)'}<br>${size.map(n=>n.toFixed(1)).join(' × ')} mm · ONE HORN`;$('message').textContent=params.curl>240||params.diameter/params.length>0.35||Math.abs(params.twist)/params.segments>30?'Tight or coarse geometry can intersect itself. Inspect in your slicer before printing.':'';draw();}
+function rebuild(){const spiral=params.curveMode==='corkscrew';for(const key of ['curl','sweep','bend'])$(key).closest('.control').hidden=spiral;$('turns').closest('section').hidden=!spiral;const meshType=$('mesh-type').value;$('decimation-controls').hidden=meshType!=='decimated';$('detail-value').textContent=$('detail').value+'%';mesh=Horn.generate({...params,meshType,detail:Number($('detail').value)});const size=Horn.bounds(mesh).size;$('stats').innerHTML=`${mesh.vertices.length} VERTICES / ${$('mesh-type').value!=='quads'?mesh.faces.length+' TRIANGLES':mesh.faces.length+' POLYGONS (QUADS + CAPS)'}<br>${size.map(n=>n.toFixed(1)).join(' × ')} mm · ONE HORN`;$('message').textContent=(!spiral&&params.curl>240)||(spiral&&(params.segments/params.turns<12||params.length*Math.cos(params.coilAngle*Math.PI/180)/params.turns<params.diameter*1.5))||params.diameter/params.length>0.35||Math.abs(params.twist)/params.segments>30?'Tight or coarse geometry can intersect itself. Inspect in your slicer before printing.':'';draw();}
 const canvas=$('view'),ctx=canvas.getContext('2d');
 function draw(){if(!mesh)return;const w=canvas.clientWidth,h=canvas.clientHeight,dpr=devicePixelRatio||1;if(canvas.width!==Math.round(w*dpr)||canvas.height!==Math.round(h*dpr)){canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);}ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
-  const pair=$('paired').checked,bounds=Horn.bounds(mesh),gap=params.diameter*0.8;
+  const pair=$('paired').checked,bounds=Horn.bounds(mesh),gap=Math.max(params.diameter*0.8,-bounds.min[0]+params.diameter*0.5);
   // Put the original on the right and its mirror on the left, curving outward.
   const models=pair?[{m:mesh,offset:gap},{m:Horn.mirror(mesh),offset:-gap}]:[{m:mesh,offset:0}];
   const all=models.flatMap(({m,offset})=>m.vertices.map(([x,y,z])=>[x+offset,y,z]));
@@ -37,6 +38,7 @@ canvas.onpointerup=canvas.onpointercancel=()=>drag=null;
 canvas.addEventListener('wheel',e=>{e.preventDefault();zoom=Math.max(0.35,Math.min(4,zoom*Math.exp(-e.deltaY*0.001)));draw();},{passive:false});
 $('reset').onclick=()=>{yaw=-0.65;pitch=0.2;zoom=1;draw();};
 for(const id of ['paired','edges'])$(id).onchange=draw;
+$('curve-mode').onchange=()=>{params.curveMode=$('curve-mode').value;$('shape-name').textContent='Custom shape';rebuild();};
 $('mesh-type').onchange=rebuild;
 $('detail').oninput=rebuild;
 new ResizeObserver(draw).observe(canvas);

@@ -32,7 +32,15 @@ document.querySelector('iframe').onload=async function(){
     d.getElementById('mesh-type').value='quads';await load(saved);assert(d.getElementById('mesh-type').value==='triangles','restored mesh type');
     await load(decimated);assert(d.getElementById('mesh-type').value==='decimated'&&d.getElementById('detail').value==='10','restored decimation');
     delete saved.meshType;await load(saved);assert(d.getElementById('mesh-type').value==='quads','legacy settings default');
-    out.textContent='PASS: presets, sliders, numeric controls, STL, all four mesh modes, decimation detail, saved and loaded mesh type';
+    d.getElementById('preset').value='Corkscrew';d.getElementById('preset').dispatchEvent(new w.Event('change'));
+    assert(d.getElementById('curve-mode').value==='corkscrew','corkscrew preset selects curve mode');
+    assert(d.getElementById('curl').closest('.control').hidden&&!d.getElementById('turns').closest('section').hidden,'mode-specific controls');
+    d.getElementById('turns').value=2;d.getElementById('turns').dispatchEvent(new w.Event('input'));
+    d.getElementById('save').click();const spiral=JSON.parse(await blob.text());assert(spiral.parameters.turns===2&&spiral.parameters.curveMode==='corkscrew','save spiral');
+    d.getElementById('curve-mode').value='curl';d.getElementById('curve-mode').dispatchEvent(new w.Event('change'));
+    await load(spiral);assert(d.getElementById('curve-mode').value==='corkscrew'&&d.getElementById('turns').value==='2','restore spiral');
+    delete saved.parameters.curveMode;await load(saved);assert(d.getElementById('curve-mode').value==='curl','legacy curve mode');
+    out.textContent='PASS: presets, controls, STL, four mesh modes, saved settings, corkscrew controls and restoration';
   }catch(e){out.textContent='FAIL: '+e.stack;}
 };
 </script>

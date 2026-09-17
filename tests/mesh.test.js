@@ -33,3 +33,18 @@ for(const [name,p] of Object.entries(H.presets))test(name+' decimated mesh retai
   assert.ok(m.vertices.some(v=>!original.has(v.join(','))));
 });
 test('decimation detail controls density',()=>{const p={...H.defaults,meshType:'decimated'};const coarse=H.generate({...p,detail:10}),fine=H.generate({...p,detail:60});check(coarse);check(fine);assert.ok(coarse.faces.length<fine.faces.length);});
+test('corkscrew centerline winds through the specified turns',()=>{
+  const p={...H.presets.Corkscrew,turns:2,coilTaper:0,segments:64},m=H.generate(p);
+  const angles=m.centers.slice(1).map((v,i)=>{const d=H.V.sub(v,m.centers[i]);return Math.atan2(d[1],d[0]);});
+  let rotation=0;for(let i=1;i<angles.length;i++){let d=angles[i]-angles[i-1];while(d>Math.PI)d-=2*Math.PI;while(d< -Math.PI)d+=2*Math.PI;rotation+=d;}
+  assert.ok(Math.abs(rotation-4*Math.PI)<0.3,'two full revolutions of centerline tangent');
+  assert.ok(m.centers.every((v,i)=>!i||v[2]>m.centers[i-1][2]),'positive helix pitch');
+  const coarse=H.generate({...p,segments:16});assert.deepEqual(m.centers.at(-1),coarse.centers.at(-1));
+  assert.deepEqual(m.centers,H.generate({...p,twist:180}).centers,'cross-section twist is independent');
+});
+test('corkscrew works in each topology and legacy settings keep original mode',()=>{
+  for(const meshType of ['quads','split','triangles']){const m=H.generate({...H.presets.Corkscrew,meshType});check(m);check(H.mirror(m));}
+  const straight=H.generate({...H.presets.Corkscrew,coilAngle:0});assert.ok(straight.centers.every(v=>v[0]===0&&v[1]===0));
+  assert.equal(H.validate({length:220}).curveMode,'curl');
+  for(const p of [{curveMode:'bad'},{turns:0},{coilAngle:90},{coilTaper:2}])assert.throws(()=>H.generate(p));
+});

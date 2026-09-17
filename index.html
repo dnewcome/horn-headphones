@@ -5,6 +5,7 @@
 <aside>
   <header><span class="eyebrow">PARAMETRIC OBJECTS / 001</span><h1>Horn Lab<span>↗</span></h1><p>Goat, ram, or something stranger.<br>Shape a pair. Keep the facets.</p></header>
   <label class="preset-label" for="preset">Starting shape</label><select id="preset"></select>
+  <label class="preset-label" for="curve-mode">Curve mode</label><select id="curve-mode"><option value="curl">Swept curl</option><option value="corkscrew">Spiral / corkscrew</option></select>
   <label class="preset-label" for="mesh-type">Mesh faces</label><select id="mesh-type"><option value="quads">Quads</option><option value="split">Split-quad triangles</option><option value="triangles">Triangular lattice</option><option value="decimated">Decimated triangles</option></select>
   <div id="decimation-controls" hidden><div class="control"><label for="detail">Retained mesh detail <output id="detail-value">25%</output></label><input id="detail" type="range" min="5" max="100" step="1" value="25"></div><p class="note">Lower detail creates larger, irregular facets. The base and tip perimeters stay fixed.</p></div>
   <div id="controls"></div>

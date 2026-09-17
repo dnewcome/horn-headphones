@@ -6,19 +6,21 @@
     cross: (a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],
     unit: a=>{const n=Math.hypot(...a); return a.map(x=>x/n);}
   };
-  const defaults = {length:220,diameter:38,segments:18,sides:7,curl:115,sweep:35,twist:30,taper:0.85,bend:1.1,oval:1,tip:1.2,lean:0,swivel:0};
+  const defaults = {length:220,diameter:38,segments:18,sides:7,curl:115,sweep:35,twist:30,taper:0.85,bend:1.1,oval:1,tip:1.2,lean:0,swivel:0,curveMode:'curl',turns:1.5,coilAngle:60,coilTaper:0.3};
   const presets = {
     'Swept goat': {...defaults},
     'Ram curl': {...defaults,length:210,diameter:42,segments:26,curl:275,sweep:12,bend:0.85,taper:1.1,twist:0},
-    'Twisted ibex': {...defaults,length:190,diameter:32,segments:22,curl:55,sweep:130,twist:200,oval:0.75,taper:0.75}
+    'Twisted ibex': {...defaults,length:190,diameter:32,segments:22,curl:55,sweep:130,twist:200,oval:0.75,taper:0.75},
+    'Corkscrew': {...defaults,curveMode:'corkscrew',length:260,diameter:22,segments:48,twist:0,taper:0.95}
   };
-  const limits = {length:[40,300],diameter:[10,70],segments:[4,64],sides:[3,24],curl:[0,320],sweep:[-180,180],twist:[-360,360],taper:[0.4,1.8],bend:[0.5,2.5],oval:[0.5,1.5],tip:[0.5,4],lean:[-45,45],swivel:[-180,180]};
+  const limits = {length:[40,300],diameter:[10,70],segments:[4,64],sides:[3,24],curl:[0,320],sweep:[-180,180],twist:[-360,360],taper:[0.4,1.8],bend:[0.5,2.5],oval:[0.5,1.5],tip:[0.5,4],lean:[-45,45],swivel:[-180,180],turns:[0.25,3],coilAngle:[0,75],coilTaper:[0,1]};
   function validate(input) {
     const p={...defaults,...input};
     for (const [k,[lo,hi]] of Object.entries(limits)) {
       if (!Number.isFinite(p[k]) || p[k]<lo || p[k]>hi) throw Error(`${k} must be between ${lo} and ${hi}`);
     }
     if (!Number.isInteger(p.segments)||!Number.isInteger(p.sides)) throw Error('Mesh counts must be integers');
+    if(!['curl','corkscrew'].includes(p.curveMode)) throw Error('Unknown curve mode');
     p.meshType=p.meshType??'quads';p.detail=p.detail??25;
     if(!['quads','split','triangles','decimated'].includes(p.meshType)) throw Error('Unknown mesh face type');
     if(!Number.isFinite(p.detail)||p.detail<5||p.detail>100) throw Error('Detail must be between 5 and 100');
@@ -34,7 +36,17 @@
     }
     // Ease the lean through the root so the mounting face stays horizontal.
     const orient=([x,y,z],t)=>{const u0=Math.min(1,t/Math.min(0.65,p.diameter*1.5/p.length)),ease=u0*u0*(3-2*u0),a=p.lean*rad*ease,b=p.swivel*rad,u=x*Math.cos(a)+z*Math.sin(a),v=-x*Math.sin(a)+z*Math.cos(a);return [u*Math.cos(b)-y*Math.sin(b),u*Math.sin(b)+y*Math.cos(b),v];};
-    const tangent=t=>{const a=p.curl*rad*Math.pow(t,p.bend), b=p.sweep*rad*t; return orient([Math.sin(a)*Math.cos(b),Math.sin(a)*Math.sin(b),Math.cos(a)],t);};
+    const tangent=t=>{
+      let a,b;
+      if(p.curveMode==='corkscrew') {
+        // Rotate the centerline tangent through whole turns. A vertical root
+        // blends into the helix; reducing its cone angle tightens the tip coils.
+        const u=Math.min(1,t/0.12),ease=u*u*(3-2*u);
+        a=p.coilAngle*rad*ease*(1-p.coilTaper*t);
+        b=2*Math.PI*p.turns*t;
+      } else {a=p.curl*rad*Math.pow(t,p.bend);b=p.sweep*rad*t;}
+      return orient([Math.sin(a)*Math.cos(b),Math.sin(a)*Math.sin(b),Math.cos(a)],t);
+    };
     // Fixed integration resolution keeps the underlying curve independent of mesh density.
     const steps=4096, path=[[0,0,0]];
     for(let i=0;i<steps;i++) path.push(V.add(path[i],V.mul(tangent((i+0.5)/steps),p.length/steps)));

@@ -2,12 +2,16 @@
 
 Open **[index.html](index.html)** in a browser. No installation, server, network connection, or build step is needed. Drag the preview to orbit; scroll to zoom.
 
-Start with **Swept goat**, **Ram curl**, or **Twisted ibex**. Save settings as JSON to keep a design; load that file to resume. Ready-made STL, OBJ, and settings files for all three presets are in `examples/`.
+Start with **Swept goat**, **Ram curl**, **Twisted ibex**, or **Corkscrew**. Save settings as JSON to keep a design; load that file to resume. Ready-made STL, OBJ, and settings files for the presets are in `examples/`.
 
 ## Shape controls
 
 | Control | Effect |
 | --- | --- |
+| Curve mode | Swept curl or spiral/corkscrew; independent of mesh face style. |
+| Spiral turns | 0.25–3 revolutions of the centerline bending direction. |
+| Coil angle / spread | Larger angles create wider coils and less height per turn; zero gives a straight horn. |
+| Tighten toward tip | Reduces coil spread toward the tip. Zero keeps a uniform helix after the root transition. |
 | Mesh faces | Quads, split-quad triangles, triangular lattice, or decimated triangles. Changes the actual mesh used by the preview and exports. Saved with settings. |
 | Centerline length | Length along the horn in millimeters, rather than its vertical height. The default goat is approximately 121 mm tall. |
 | Base diameter | Diameter across the cross-section's circumcircle before oval scaling. With odd side counts, measured width differs slightly. |
@@ -23,7 +27,13 @@ Start with **Swept goat**, **Ram curl**, or **Twisted ibex**. Save settings as J
 | Lean from base normal | Adds an angle above the mounting face. Lean eases through a curved root, keeping the base flat; it is not a mechanical hinge. |
 | Swivel around base | Turns the curve's direction around the base's vertical axis. |
 
-The mirrored pair preview uses a fixed display spacing. It is a shape study, not a fitted headband assembly. Each download contains **one horn**; check **Export mirrored horn** for its mate. The mirror reverses face winding to retain outward normals.
+The mirrored pair preview automatically spaces the horns apart for viewing. It is a shape study, not a fitted headband assembly. Each download contains **one horn**; check **Export mirrored horn** for its mate. The mirror reverses face winding to retain outward normals.
+
+## Corkscrew horns
+
+Choose the **Corkscrew** preset for a pronounced spiral, or switch **Curve mode** on an existing design. The centerline itself coils around an axis; **Cross-section twist** still independently rotates the facets. Spiral controls replace curl, sweep, and bend distribution in this mode. Length remains measured along the centerline, so increasing spread reduces the overall height. The root eases into the coil to retain a flat mounting face. Lean, swivel, mirroring, and all four mesh modes still work.
+
+Start with the preset’s 48 lengthwise segments for 1.5 turns. More turns need more segments and a thinner horn to keep the coils distinct. Coarse sampling or thick, tight coils can intersect; inspect them in your slicer. The editor’s warning is a heuristic, not a collision test.
 
 ## Triangle styles
 
